@@ -112,6 +112,8 @@ func NewWebRTCConfig(conf *config.Config) (*WebRTCConfig, error) {
 			},
 		},
 	}
+	publisherConfig.RTPHeaderExtension.Audio = append(publisherConfig.RTPHeaderExtension.Audio, rtcConf.PublisherHeaderExtensions.Audio...)
+	publisherConfig.RTPHeaderExtension.Video = append(publisherConfig.RTPHeaderExtension.Video, rtcConf.PublisherHeaderExtensions.Video...)
 
 	// subscriber configuration
 	subscriberConfig := DirectionConfig{
@@ -133,6 +135,9 @@ func NewWebRTCConfig(conf *config.Config) (*WebRTCConfig, error) {
 			},
 		},
 	}
+	subscriberConfig.RTPHeaderExtension.Video = append(subscriberConfig.RTPHeaderExtension.Video, rtcConf.SubscriberHeaderExtensions.Video...)
+	subscriberConfig.RTPHeaderExtension.Audio = append(subscriberConfig.RTPHeaderExtension.Audio, rtcConf.SubscriberHeaderExtensions.Audio...)
+
 	if rtcConf.CongestionControl.UseSendSideBWE {
 		subscriberConfig.RTPHeaderExtension.Video = append(subscriberConfig.RTPHeaderExtension.Video, sdp.TransportCCURI)
 		subscriberConfig.RTCPFeedback.Video = append(subscriberConfig.RTCPFeedback.Video, webrtc.RTCPFeedback{Type: webrtc.TypeRTCPFBTransportCC})

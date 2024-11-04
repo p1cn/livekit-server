@@ -315,6 +315,8 @@ type DownTrack struct {
 	onCodecNegotiated           func(webrtc.RTPCodecCapability)
 
 	createdAt int64
+
+	customHeaderExtensions []webrtc.RTPHeaderExtensionParameter
 }
 
 type bindState int
@@ -711,6 +713,8 @@ func (d *DownTrack) SetRTPHeaderExtensions(rtpHeaderExtensions []webrtc.RTPHeade
 			}
 		case act.AbsCaptureTimeURI:
 			d.absCaptureTimeExtID = ext.ID
+		default:
+			d.customHeaderExtensions = append(d.customHeaderExtensions, ext)
 		}
 	}
 }
@@ -940,6 +944,12 @@ func (d *DownTrack) WriteRTP(extPkt *buffer.ExtPacket, layer int32) error {
 			tp.ddBytes,
 			actBytes,
 		)
+	}
+
+	for _, ext := range d.customHeaderExtensions {
+		if v, ok := extPkt.CustomExtensions[ext.URI]; ok {
+			extensions = append(extensions, pacer.ExtensionData{ID: uint8(ext.ID), Payload: v.Payload})
+		}
 	}
 
 	d.sendingPacket(
