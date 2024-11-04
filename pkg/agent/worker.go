@@ -316,6 +316,17 @@ func (w *Worker) GetJobState(jobID livekit.JobID) (*livekit.JobState, error) {
 	return utils.CloneProto(j.State), nil
 }
 
+func (w *Worker) PopJob(jobID livekit.JobID) (*livekit.Job, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	j, ok := w.runningJobs[jobID]
+	if !ok {
+		return nil, ErrJobNotFound
+	}
+	delete(w.runningJobs, jobID)
+	return utils.CloneProto(j), nil
+}
+
 func (w *Worker) AssignJob(ctx context.Context, job *livekit.Job) (*livekit.JobState, error) {
 	availCh := make(chan *livekit.AvailabilityResponse, 1)
 	job = utils.CloneProto(job)
