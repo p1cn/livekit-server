@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -951,6 +952,10 @@ func (d *DownTrack) WriteRTP(extPkt *buffer.ExtPacket, layer int32) error {
 			extensions = append(extensions, pacer.ExtensionData{ID: uint8(ext.ID), Payload: v.Payload})
 		}
 	}
+	// sort extensions by length of payload to ensure rtp.Header uses two-byte extension
+	sort.Slice(extensions, func(i, j int) bool {
+		return len(extensions[i].Payload) > len(extensions[j].Payload)
+	})
 
 	d.sendingPacket(
 		hdr,
