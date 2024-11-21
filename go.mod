@@ -1,6 +1,6 @@
 module github.com/livekit/livekit-server
 
-go 1.22.7
+go 1.23.3
 
 require (
 	github.com/bep/debounce v1.2.1
@@ -108,6 +108,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/opencontainers/runc v1.1.14 // indirect
+	github.com/p1cn/livekit-protocol-extension v0.0.0-20241121081612-aedee16500bd // indirect
 	github.com/pion/datachannel v1.5.9 // indirect
 	github.com/pion/logging v0.2.2 // indirect
 	github.com/pion/mdns v0.0.12 // indirect

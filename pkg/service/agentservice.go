@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/p1cn/livekit-protocol-extension/livekitext"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/livekit/livekit-server/pkg/agent"
@@ -549,6 +550,25 @@ func (w *agentHandlerWorker) HandleMigrateJob(req *livekit.MigrateJobRequest) er
 			return err
 		}
 		w.h.logger.Infow("migrated job", "jobID", id, "state", res.State)
+	}
+	return nil
+}
+
+func (w *agentHandlerWorker) HandleMigrateStatefulJob(req *livekitext.MigrateStatefulJobRequest) error {
+	for _, sj := range req.Jobs {
+		job, err := w.Worker.PopJob(livekit.JobID(sj.JobId))
+		if err != nil {
+			continue
+		}
+		w.h.agentServer.DeregisterJobTerminateTopic(sj.JobId)
+
+		job.Metadata = sj.State
+		res, err := w.h.JobRequest(context.Background(), job)
+		if err != nil {
+			w.h.logger.Errorw("failed to migrate stateful job", err, "jobID", job.Id, "metadata", job.Metadata)
+			return err
+		}
+		w.h.logger.Infow("migrated job", "jobID", job.Id, "state", res.State, "metadata", job.Metadata)
 	}
 	return nil
 }
