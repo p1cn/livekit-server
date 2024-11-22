@@ -8,7 +8,7 @@ Restart=on-failure
 LimitNOFILE=102400
 WorkingDirectory=/app/duet-livekit-server/
 
-ExecStart=/app/duet-livekit-server/bin/livekit-server --config=/app/duet-livekit-server/conf/config.yaml --bind 0.0.0.0 
+ExecStart=/app/duet-livekit-server/current/bin/livekit-server --config=/app/duet-livekit-server/current/conf/config.yaml --bind 0.0.0.0 
 
 [Install]
 WantedBy=multi-user.target
