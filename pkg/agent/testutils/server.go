@@ -11,6 +11,7 @@ import (
 
 	"github.com/frostbyte73/core"
 	"github.com/gammazero/deque"
+	"github.com/p1cn/livekit-protocol-extension/livekitext"
 	"golang.org/x/exp/maps"
 
 	"github.com/livekit/livekit-server/pkg/agent"
@@ -109,7 +110,7 @@ func (h *TestServer) SimulateAgentWorker(opts ...SimulatedWorkerOption) *AgentWo
 	options.Apply(o, opts)
 
 	w := &AgentWorker{
-		workerMessages:         make(chan *livekit.WorkerMessage, 1),
+		workerMessages:         make(chan *livekitext.WorkerMessage, 1),
 		jobs:                   map[string]*AgentJob{},
 		SimulatedWorkerOptions: o,
 
@@ -176,7 +177,7 @@ type AgentWorker struct {
 	mu             sync.Mutex
 	ctx            context.Context
 	cancel         context.CancelFunc
-	workerMessages chan *livekit.WorkerMessage
+	workerMessages chan *livekitext.WorkerMessage
 	serverMessages deque.Deque[*livekit.ServerMessage]
 	jobs           map[string]*AgentJob
 
@@ -219,7 +220,7 @@ func (w *AgentWorker) SetReadDeadline(t time.Time) error {
 	return nil
 }
 
-func (w *AgentWorker) ReadWorkerMessage() (*livekit.WorkerMessage, int, error) {
+func (w *AgentWorker) ReadWorkerMessage() (*livekitext.WorkerMessage, int, error) {
 	for {
 		w.mu.Lock()
 		ctx := w.ctx
@@ -315,7 +316,7 @@ func (w *AgentWorker) handlePong(m *livekit.WorkerPong) {
 	w.WorkerPongs.Emit(m)
 }
 
-func (w *AgentWorker) sendMessage(m *livekit.WorkerMessage) {
+func (w *AgentWorker) sendMessage(m *livekitext.WorkerMessage) {
 	select {
 	case <-w.fuse.Watch():
 	case w.workerMessages <- m:
@@ -323,44 +324,50 @@ func (w *AgentWorker) sendMessage(m *livekit.WorkerMessage) {
 }
 
 func (w *AgentWorker) SendRegister(m *livekit.RegisterWorkerRequest) {
-	w.sendMessage(&livekit.WorkerMessage{Message: &livekit.WorkerMessage_Register{
+	w.sendMessage(&livekitext.WorkerMessage{Message: &livekitext.WorkerMessage_Register{
 		Register: m,
 	}})
 }
 
 func (w *AgentWorker) SendAvailability(m *livekit.AvailabilityResponse) {
-	w.sendMessage(&livekit.WorkerMessage{Message: &livekit.WorkerMessage_Availability{
+	w.sendMessage(&livekitext.WorkerMessage{Message: &livekitext.WorkerMessage_Availability{
 		Availability: m,
 	}})
 }
 
 func (w *AgentWorker) SendUpdateWorker(m *livekit.UpdateWorkerStatus) {
-	w.sendMessage(&livekit.WorkerMessage{Message: &livekit.WorkerMessage_UpdateWorker{
+	w.sendMessage(&livekitext.WorkerMessage{Message: &livekitext.WorkerMessage_UpdateWorker{
 		UpdateWorker: m,
 	}})
 }
 
 func (w *AgentWorker) SendUpdateJob(m *livekit.UpdateJobStatus) {
-	w.sendMessage(&livekit.WorkerMessage{Message: &livekit.WorkerMessage_UpdateJob{
+	w.sendMessage(&livekitext.WorkerMessage{Message: &livekitext.WorkerMessage_UpdateJob{
 		UpdateJob: m,
 	}})
 }
 
 func (w *AgentWorker) SendPing(m *livekit.WorkerPing) {
-	w.sendMessage(&livekit.WorkerMessage{Message: &livekit.WorkerMessage_Ping{
+	w.sendMessage(&livekitext.WorkerMessage{Message: &livekitext.WorkerMessage_Ping{
 		Ping: m,
 	}})
 }
 
 func (w *AgentWorker) SendSimulateJob(m *livekit.SimulateJobRequest) {
-	w.sendMessage(&livekit.WorkerMessage{Message: &livekit.WorkerMessage_SimulateJob{
+	w.sendMessage(&livekitext.WorkerMessage{Message: &livekitext.WorkerMessage_SimulateJob{
 		SimulateJob: m,
 	}})
 }
 
 func (w *AgentWorker) SendMigrateJob(m *livekit.MigrateJobRequest) {
-	w.sendMessage(&livekit.WorkerMessage{Message: &livekit.WorkerMessage_MigrateJob{
+	w.sendMessage(&livekitext.WorkerMessage{Message: &livekitext.WorkerMessage_MigrateJob{
 		MigrateJob: m,
+	}})
+}
+
+func (w *AgentWorker) SendMigrateStatefulJob(m *livekitext.MigrateStatefulJobRequest) {
+	w.sendMessage(&livekitext.WorkerMessage{Message: &livekitext.WorkerMessage_MigrateStatefulJob{
+		MigrateStatefulJob: m,
 	}})
 }
 

@@ -21,6 +21,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/p1cn/livekit-protocol-extension/livekitext"
 	"google.golang.org/protobuf/proto"
 
 	pagent "github.com/livekit/protocol/agent"
@@ -54,7 +55,7 @@ const (
 
 type SignalConn interface {
 	WriteServerMessage(msg *livekit.ServerMessage) (int, error)
-	ReadWorkerMessage() (*livekit.WorkerMessage, int, error)
+	ReadWorkerMessage() (*livekitext.WorkerMessage, int, error)
 	SetReadDeadline(time.Time) error
 	Close() error
 }
@@ -71,24 +72,27 @@ type WorkerSignalHandler interface {
 	HandlePing(*livekit.WorkerPing) error
 	HandleUpdateWorker(*livekit.UpdateWorkerStatus) error
 	HandleMigrateJob(*livekit.MigrateJobRequest) error
+	HandleMigrateStatefulJob(*livekitext.MigrateStatefulJobRequest) error
 }
 
-func DispatchWorkerSignal(req *livekit.WorkerMessage, h WorkerSignalHandler) error {
+func DispatchWorkerSignal(req *livekitext.WorkerMessage, h WorkerSignalHandler) error {
 	switch m := req.Message.(type) {
-	case *livekit.WorkerMessage_Register:
+	case *livekitext.WorkerMessage_Register:
 		return h.HandleRegister(m.Register)
-	case *livekit.WorkerMessage_Availability:
+	case *livekitext.WorkerMessage_Availability:
 		return h.HandleAvailability(m.Availability)
-	case *livekit.WorkerMessage_UpdateJob:
+	case *livekitext.WorkerMessage_UpdateJob:
 		return h.HandleUpdateJob(m.UpdateJob)
-	case *livekit.WorkerMessage_SimulateJob:
+	case *livekitext.WorkerMessage_SimulateJob:
 		return h.HandleSimulateJob(m.SimulateJob)
-	case *livekit.WorkerMessage_Ping:
+	case *livekitext.WorkerMessage_Ping:
 		return h.HandlePing(m.Ping)
-	case *livekit.WorkerMessage_UpdateWorker:
+	case *livekitext.WorkerMessage_UpdateWorker:
 		return h.HandleUpdateWorker(m.UpdateWorker)
-	case *livekit.WorkerMessage_MigrateJob:
+	case *livekitext.WorkerMessage_MigrateJob:
 		return h.HandleMigrateJob(m.MigrateJob)
+	case *livekitext.WorkerMessage_MigrateStatefulJob:
+		return h.HandleMigrateStatefulJob(m.MigrateStatefulJob)
 	default:
 		return ErrUnknownWorkerSignal
 	}
@@ -117,6 +121,9 @@ func (UnimplementedWorkerSignalHandler) HandleUpdateWorker(*livekit.UpdateWorker
 	return fmt.Errorf("%w: UpdateWorker", ErrUnimplementedWrorkerSignal)
 }
 func (UnimplementedWorkerSignalHandler) HandleMigrateJob(*livekit.MigrateJobRequest) error {
+	return fmt.Errorf("%w: MigrateJob", ErrUnimplementedWrorkerSignal)
+}
+func (UnimplementedWorkerSignalHandler) HandleMigrateStatefulJob(*livekitext.MigrateStatefulJobRequest) error {
 	return fmt.Errorf("%w: MigrateJob", ErrUnimplementedWrorkerSignal)
 }
 
@@ -314,6 +321,17 @@ func (w *Worker) GetJobState(jobID livekit.JobID) (*livekit.JobState, error) {
 		return nil, ErrJobNotFound
 	}
 	return utils.CloneProto(j.State), nil
+}
+
+func (w *Worker) PopJob(jobID livekit.JobID) (*livekit.Job, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	j, ok := w.runningJobs[jobID]
+	if !ok {
+		return nil, ErrJobNotFound
+	}
+	delete(w.runningJobs, jobID)
+	return utils.CloneProto(j), nil
 }
 
 func (w *Worker) AssignJob(ctx context.Context, job *livekit.Job) (*livekit.JobState, error) {

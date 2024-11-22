@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/p1cn/livekit-protocol-extension/livekitext"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/livekit/livekit-server/pkg/agent"
@@ -495,6 +496,25 @@ func (h *AgentHandler) selectWorkerWeightedByLoad(key workerKey, ignore map[*age
 	return workers[0], nil
 }
 
+func (h *AgentHandler) migrateWorkerJobs(w *agent.Worker) {
+	jobs := w.RunningJobs()
+	for jobID := range jobs {
+		job, err := w.PopJob(jobID)
+		if err != nil {
+			h.logger.Errorw("failed to migrate job", err, "jobID", jobID)
+			continue
+		}
+		h.agentServer.DeregisterJobTerminateTopic(string(jobID))
+
+		res, err := h.JobRequest(context.Background(), job)
+		if err != nil {
+			h.logger.Errorw("failed to migrate job", err, "jobID", jobID)
+			continue
+		}
+		h.logger.Infow("migrated job", "jobID", jobID, "state", res.State)
+	}
+}
+
 var _ agent.WorkerSignalHandler = (*agentHandlerWorker)(nil)
 
 type agentHandlerWorker struct {
@@ -511,6 +531,44 @@ func (w *agentHandlerWorker) HandleUpdateJob(update *livekit.UpdateJobStatus) er
 		w.h.mu.Lock()
 		w.h.deregisterJob(livekit.JobID(update.JobId))
 		w.h.mu.Unlock()
+	}
+	return nil
+}
+
+func (w *agentHandlerWorker) HandleMigrateJob(req *livekit.MigrateJobRequest) error {
+	for _, id := range req.JobIds {
+		job, err := w.Worker.PopJob(livekit.JobID(id))
+		if err != nil {
+			continue
+		}
+		w.h.agentServer.DeregisterJobTerminateTopic(id)
+
+		// TODO: return job to the original worker if failed to migrate job?
+		res, err := w.h.JobRequest(context.Background(), job)
+		if err != nil {
+			w.h.logger.Errorw("failed to migrate job", err, "jobID", id)
+			return err
+		}
+		w.h.logger.Infow("migrated job", "jobID", id, "state", res.State)
+	}
+	return nil
+}
+
+func (w *agentHandlerWorker) HandleMigrateStatefulJob(req *livekitext.MigrateStatefulJobRequest) error {
+	for _, sj := range req.Jobs {
+		job, err := w.Worker.PopJob(livekit.JobID(sj.JobId))
+		if err != nil {
+			continue
+		}
+		w.h.agentServer.DeregisterJobTerminateTopic(sj.JobId)
+
+		job.Metadata = sj.State
+		res, err := w.h.JobRequest(context.Background(), job)
+		if err != nil {
+			w.h.logger.Errorw("failed to migrate stateful job", err, "jobID", job.Id, "metadata", job.Metadata)
+			return err
+		}
+		w.h.logger.Infow("migrated job", "jobID", job.Id, "state", res.State, "metadata", job.Metadata)
 	}
 	return nil
 }

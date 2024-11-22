@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/p1cn/livekit-protocol-extension/livekitext"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
@@ -94,7 +95,7 @@ func (c *WSSignalConnection) ReadRequest() (*livekit.SignalRequest, int, error) 
 	}
 }
 
-func (c *WSSignalConnection) ReadWorkerMessage() (*livekit.WorkerMessage, int, error) {
+func (c *WSSignalConnection) ReadWorkerMessage() (*livekitext.WorkerMessage, int, error) {
 	for {
 		// handle special messages and pass on the rest
 		messageType, payload, err := c.conn.ReadMessage()
@@ -102,7 +103,7 @@ func (c *WSSignalConnection) ReadWorkerMessage() (*livekit.WorkerMessage, int, e
 			return nil, 0, err
 		}
 
-		msg := &livekit.WorkerMessage{}
+		msg := &livekitext.WorkerMessage{}
 		switch messageType {
 		case websocket.BinaryMessage:
 			if c.useJSON {

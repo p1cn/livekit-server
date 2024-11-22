@@ -1,0 +1,14 @@
+[Unit]
+Description=duet-livekit-server
+
+[Service]
+Type=simple
+User=omi
+Restart=on-failure
+LimitNOFILE=102400
+WorkingDirectory=/app/duet-livekit-server/
+
+ExecStart=/app/duet-livekit-server/bin/livekit-server --config=/app/duet-livekit-server/conf/config.yaml --bind 0.0.0.0 
+
+[Install]
+WantedBy=multi-user.target

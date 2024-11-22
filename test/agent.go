@@ -21,6 +21,7 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
+	"github.com/p1cn/livekit-protocol-extension/livekitext"
 	"go.uber.org/atomic"
 	"google.golang.org/protobuf/proto"
 
@@ -69,8 +70,8 @@ func (c *agentClient) Run(jobType livekit.JobType, namespace string) (err error)
 
 	switch jobType {
 	case livekit.JobType_JT_ROOM:
-		err = c.write(&livekit.WorkerMessage{
-			Message: &livekit.WorkerMessage_Register{
+		err = c.write(&livekitext.WorkerMessage{
+			Message: &livekitext.WorkerMessage_Register{
 				Register: &livekit.RegisterWorkerRequest{
 					Type:      livekit.JobType_JT_ROOM,
 					Version:   "version",
@@ -80,8 +81,8 @@ func (c *agentClient) Run(jobType livekit.JobType, namespace string) (err error)
 		})
 
 	case livekit.JobType_JT_PUBLISHER:
-		err = c.write(&livekit.WorkerMessage{
-			Message: &livekit.WorkerMessage_Register{
+		err = c.write(&livekitext.WorkerMessage{
+			Message: &livekitext.WorkerMessage_Register{
 				Register: &livekit.RegisterWorkerRequest{
 					Type:      livekit.JobType_JT_PUBLISHER,
 					Version:   "version",
@@ -139,8 +140,8 @@ func (c *agentClient) handleAvailability(req *livekit.AvailabilityRequest) {
 
 	c.requestedJobs <- req.Job
 
-	c.write(&livekit.WorkerMessage{
-		Message: &livekit.WorkerMessage_Availability{
+	c.write(&livekitext.WorkerMessage{
+		Message: &livekitext.WorkerMessage_Availability{
 			Availability: &livekit.AvailabilityResponse{
 				JobId:     req.Job.Id,
 				Available: true,
@@ -153,7 +154,7 @@ func (c *agentClient) handleRegister(req *livekit.RegisterWorkerResponse) {
 	c.registered.Inc()
 }
 
-func (c *agentClient) write(msg *livekit.WorkerMessage) error {
+func (c *agentClient) write(msg *livekitext.WorkerMessage) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
