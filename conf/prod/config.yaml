@@ -80,8 +80,8 @@ rtc:
   # # optional STUN servers for LiveKit clients to use. Clients will be configured to use these STUN servers automatically.
   # # by default LiveKit clients use Google's public STUN servers
   stun_servers:
-    - stun:stun.l.google.com:19302
-    - stun:stun1.l.google.com:19302
+    - stun.l.google.com:19302
+    - stun1.l.google.com:19302
 
   # # optional TURN servers for clients. This isn't necessary if using embedded TURN server (see below).
   # turn_servers:
