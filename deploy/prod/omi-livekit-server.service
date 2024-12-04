@@ -1,0 +1,14 @@
+[Unit]
+Description=omi-livekit-server
+
+[Service]
+Type=simple
+User=omi
+Restart=on-failure
+LimitNOFILE=102400
+WorkingDirectory=/app/omi-livekit-server/
+
+ExecStart=/app/omi-livekit-server/current/bin/livekit-server --config=/app/omi-livekit-server/current/conf/config.yaml --bind 0.0.0.0 
+
+[Install]
+WantedBy=multi-user.target
