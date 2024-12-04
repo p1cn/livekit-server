@@ -1795,10 +1795,9 @@ func BroadcastDataPacketForRoom(r types.Room, source types.LocalParticipant, kin
 	if user := dp.GetUser(); user != nil && user.Topic != nil {
 		topic = *user.Topic
 	}
-	room := r.Name()
 
 	utils.ParallelExec(destParticipants, dataForwardLoadBalanceThreshold, 1, func(op types.LocalParticipant) {
-		logger.Debugw("forwarding data packet", "room", room, "from", from_participatn, "to", op.Identity(), "topic", topic)
+		logger.Debugw("forwarding data packet", "from", from_participatn, "to", op.Identity(), "topic", topic)
 		op.SendDataPacket(kind, dpData)
 	})
 }
