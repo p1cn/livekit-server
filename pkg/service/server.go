@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	_ "net/http/pprof"
+	httpprof "net/http/pprof"
 	"runtime"
 	"runtime/pprof"
 	"strconv"
@@ -148,6 +148,7 @@ func NewLivekitServer(conf *config.Config,
 	}
 
 	if conf.Prometheus.Port > 0 {
+		debugMux := http.NewServeMux()
 		promHandler := promhttp.Handler()
 		if conf.Prometheus.Username != "" && conf.Prometheus.Password != "" {
 			protectedHandler := negroni.New()
@@ -155,8 +156,16 @@ func NewLivekitServer(conf *config.Config,
 			protectedHandler.UseHandler(promHandler)
 			promHandler = protectedHandler
 		}
+		debugMux.Handle("/metrics", promHandler)
+		debugMux.HandleFunc("/debug/goroutine", s.debugGoroutines)
+		debugMux.HandleFunc("/debug/rooms", s.debugInfo)
+		debugMux.HandleFunc("/debug/pprof/", httpprof.Index)
+		debugMux.HandleFunc("/debug/pprof/cmdline", httpprof.Cmdline)
+		debugMux.HandleFunc("/debug/pprof/profile", httpprof.Profile)
+		debugMux.HandleFunc("/debug/pprof/symbol", httpprof.Symbol)
+		debugMux.HandleFunc("/debug/pprof/trace", httpprof.Trace)
 		s.promServer = &http.Server{
-			Handler: promHandler,
+			Handler: debugMux,
 		}
 	}
 

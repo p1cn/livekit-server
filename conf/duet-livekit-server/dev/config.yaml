@@ -166,7 +166,7 @@ rtc:
   # data_channel_max_buffered_amount: 0
 
 # when enabled, LiveKit will expose prometheus metrics on :6789/metrics
-# prometheus_port: 6789
+prometheus_port: 6789
 
 # API key / secret pairs.
 # Keys are used for JWT authentication, server APIs would require a keypair in order to generate access tokens
