@@ -27,6 +27,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/ory/dockertest/v3 v3.11.0
+	github.com/p1cn/livekit-protocol-extension v0.0.0-20241121081612-aedee16500bd
 	github.com/pion/dtls/v2 v2.2.12
 	github.com/pion/ice/v2 v2.3.37
 	github.com/pion/interceptor v0.1.37
@@ -108,7 +109,6 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/opencontainers/runc v1.1.14 // indirect
-	github.com/p1cn/livekit-protocol-extension v0.0.0-20241121081612-aedee16500bd // indirect
 	github.com/pion/datachannel v1.5.9 // indirect
 	github.com/pion/logging v0.2.2 // indirect
 	github.com/pion/mdns v0.0.12 // indirect
