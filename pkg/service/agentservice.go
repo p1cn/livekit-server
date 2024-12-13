@@ -418,12 +418,13 @@ func (h *AgentHandler) JobRequestAffinity(ctx context.Context, job *livekit.Job)
 
 func (h *AgentHandler) JobTerminate(ctx context.Context, req *rpc.JobTerminateRequest) (*rpc.JobTerminateResponse, error) {
 	h.mu.Lock()
+	defer h.mu.Unlock()
 	w := h.jobToWorker[livekit.JobID(req.JobId)]
-	h.mu.Unlock()
 
 	if w == nil {
 		return nil, psrpc.NewErrorf(psrpc.NotFound, "no worker for jobID")
 	}
+	defer h.deregisterJob(livekit.JobID(req.JobId))
 
 	state, err := w.TerminateJob(livekit.JobID(req.JobId), req.Reason)
 	if err != nil {
