@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: qianshou-livekit-server
+  name: qianshou-livekit-server
+  namespace: default
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: qianshou-livekit-server
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        p1.cn/metric_path: /metrics
+        p1.cn/scrape_port: "6789"
+        p1.cn/should_be_scraped: "true"
+        proxy.istio.io/config: |
+          holdApplicationUntilProxyStarts: true
+          terminationDrainDuration: 60s
+      labels:
+        app: qianshou-livekit-server
+        service_name: qianshou-livekit-server
+    spec:
+      containers:
+        - env:
+          image: {{image-url}}
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 2
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            httpGet:
+              path: /debug/pprof/cmdline
+              port: 6789
+              scheme: HTTP
+            timeoutSeconds: 5
+          name: qianshou-livekit-server
+          readinessProbe:
+            failureThreshold: 2
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            httpGet:
+              path: /debug/pprof/cmdline
+              port: 6789
+              scheme: HTTP
+            timeoutSeconds: 10
+          resources:
+            limits:
+              cpu: "8"
+              memory: 16Gi
+            requests:
+              cpu: "100m"
+              memory: 2Gi
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: regcred
+      securityContext: {}
+      terminationGracePeriodSeconds: 60
+      tolerations:
+        - effect: NoExecute
+          key: node.kubernetes.io/not-ready
+          operator: Exists
+          tolerationSeconds: 15
+        - effect: NoExecute
+          key: node.kubernetes.io/unreachable
+          operator: Exists
+          tolerationSeconds: 15
