@@ -1,0 +1,14 @@
+[Unit]
+Description=qianshou-livekit-server
+
+[Service]
+Type=simple
+User=qianshou
+Restart=on-failure
+LimitNOFILE=102400
+WorkingDirectory=/app/qianshou-livekit-server/
+
+ExecStart=/app/qianshou-livekit-server/current/bin/livekit-server --config=/app/qianshou-livekit-server/current/conf/config.yaml --bind 0.0.0.0 
+
+[Install]
+WantedBy=multi-user.target
