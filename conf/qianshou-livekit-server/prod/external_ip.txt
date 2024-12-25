@@ -1,0 +1,2 @@
+8.qianshou-livekit-server 106.75.9.164
+9.qianshou-livekit-server 106.75.11.73
