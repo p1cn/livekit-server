@@ -3,7 +3,7 @@ Description=qianshou-livekit-server
 
 [Service]
 Type=simple
-User=qianshou
+User=root
 Restart=on-failure
 LimitNOFILE=102400
 WorkingDirectory=/app/qianshou-livekit-server/
