@@ -18,7 +18,7 @@ port: 7880
 
 # when redis is set, LiveKit will automatically operate in a fully distributed fashion
 # clients could connect to any node and be routed to the same room
-# redis:
+redis:
   # address: 10.4.1.146:6379
   # db: 0
   # username: test 
@@ -44,9 +44,10 @@ port: 7880
   #   client_key_file: /path/to/client.key
   #
   # To use cluster remove the address key above and add the following
-  # cluster_addresses:
-  # - livekit-redis-node-0.livekit-redis-headless:6379
-  # - livekit-redis-node-1.livekit-redis-headless:6380
+  cluster_addresses:
+    - 10.10.1.146:6501 
+    - 10.10.1.146:6502
+    - 10.10.1.146:6503
   # And it will use the password key above as cluster password
   # And the db key will not be used due to cluster mode not support it.
 
